@@ -14,10 +14,11 @@ public class Comment {
 	@Setter
 	String message;
 	LocalDateTime dateCreated;
-	int likes;
+	Integer likes;
 
 	public Comment() {
 		dateCreated = LocalDateTime.now();
+		likes = 0;
 	}
 
 	public Comment(String user, String message) {
