@@ -42,14 +42,14 @@ public class UserAccountServiceImpl implements UserAccountService {
 
 	@Override
 	public UserDto removeUser(String login) {
-		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(() -> new UserNotFoundException());
+		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(UserNotFoundException::new);
 		userAccountRepository.deleteById(login);
 		return modelMapper.map(userAccount, UserDto.class);
 	}
 
 	@Override
 	public UserDto updateUser(String login, UserEditDto userEditDto) {
-		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(() -> new UserNotFoundException());
+		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(UserNotFoundException::new);
 		if (userEditDto.getFirstName() != null) {
 			userAccount.setFirstName(userEditDto.getFirstName());
 		}
@@ -62,7 +62,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
 	@Override
 	public RolesDto changeRolesList(String login, String role, boolean isAddRole) {
-		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(() -> new UserNotFoundException());
+		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(UserNotFoundException::new);
 		boolean res;
 		if (isAddRole) {
 			res = userAccount.addRole(role.toUpperCase());
@@ -77,8 +77,9 @@ public class UserAccountServiceImpl implements UserAccountService {
 
 	@Override
 	public void changePassword(String login, String newPassword) {
-		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(() -> new UserNotFoundException());
-		userAccount.setPassword(newPassword);
+		UserAccount userAccount = userAccountRepository.findById(login).orElseThrow(UserNotFoundException::new);
+		String password = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+		userAccount.setPassword(password);
 		userAccountRepository.save(userAccount);
 
 	}
