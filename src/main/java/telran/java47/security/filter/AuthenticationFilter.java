@@ -21,6 +21,7 @@ public class AuthenticationFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
 		System.out.println(request.getHeader("Authorization"));
+		chain.doFilter(request, response);
 
 	}
 
