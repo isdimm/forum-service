@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import telran.java47.accounting.dao.UserAccountRepository;
-import telran.java47.accounting.dto.exceptions.UserNotFoundException;
 import telran.java47.accounting.model.UserAccount;
 
 @Component
@@ -31,14 +30,26 @@ public class AuthenticationFilter implements Filter {
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
-		String[] credentials = getCredentials(request.getHeader("Authorization"));
-		UserAccount userAccount = userAccountRepository.findById(credentials[0]).orElseThrow(UserNotFoundException::new);
-		if(!BCrypt.checkpw(credentials[1], userAccount.getPassword())) {
-			response.sendError(401);
-			return;
+		if (checkEndpoint(request.getMethod(), request.getServletPath())) {
+			String[] credentials;
+			try {
+				credentials = getCredentials(request.getHeader("Authorization"));
+			} catch (Exception e) {
+				response.sendError(401, "token is not valid");
+				return;
+			}
+			UserAccount userAccount = userAccountRepository.findById(credentials[0]).orElse(null);
+			if (userAccount == null || !BCrypt.checkpw(credentials[1], userAccount.getPassword())) {
+				response.sendError(401, "login or password is not valid");
+				return;
+			} 
 		}
 		chain.doFilter(request, response);
 
+	}
+
+	private boolean checkEndpoint(String method, String path) {
+		return !("POST".equals(method) && path.matches("/account/register/?"));
 	}
 
 	private String[] getCredentials(String token) {
