@@ -25,6 +25,7 @@ import telran.java47.accounting.model.UserAccount;
 @RequiredArgsConstructor
 @Order(10)
 public class AuthenticationFilter implements Filter {
+
 	final UserAccountRepository userAccountRepository;
 
 	@Override
@@ -32,28 +33,26 @@ public class AuthenticationFilter implements Filter {
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
-		if (checkEndpoint(request.getMethod(), request.getServletPath())) {
+		if (checkEndPoint(request.getMethod(), request.getServletPath())) {
 			String[] credentials;
 			try {
 				credentials = getCredentials(request.getHeader("Authorization"));
 			} catch (Exception e) {
-				response.sendError(401, "token is not valid");
+				response.sendError(401, "token not valid");
 				return;
 			}
 			UserAccount userAccount = userAccountRepository.findById(credentials[0]).orElse(null);
 			if (userAccount == null || !BCrypt.checkpw(credentials[1], userAccount.getPassword())) {
 				response.sendError(401, "login or password is not valid");
 				return;
-			} 
-			
+			}
 			request = new WrappedRequest(request, credentials[0]);
 		}
 		chain.doFilter(request, response);
-
 	}
 
-	private boolean checkEndpoint(String method, String path) {
-		return !("POST".equals(method) && path.matches("/account/register/?"));
+	private boolean checkEndPoint(String method, String path) {
+		return !("POST".equalsIgnoreCase(method) && path.matches("/account/register/?"));
 	}
 
 	private String[] getCredentials(String token) {
@@ -62,7 +61,7 @@ public class AuthenticationFilter implements Filter {
 		return decode.split(":");
 	}
 
-	private static class WrappedRequest extends HttpServletRequestWrapper{
+	private static class WrappedRequest extends HttpServletRequestWrapper {
 		String login;
 
 		public WrappedRequest(HttpServletRequest request, String login) {
@@ -74,6 +73,7 @@ public class AuthenticationFilter implements Filter {
 		public Principal getUserPrincipal() {
 			return () -> login;
 		}
-		
+
 	}
+
 }
